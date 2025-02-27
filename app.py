@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 
 # OpenRouter API details
-API_KEY = "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"
+API_KEY = "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"
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODEL_NAME = "deepseek/deepseek-chat:free"
 
