@@ -1,9 +1,14 @@
 import streamlit as st
 import requests
 import time
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 # OpenRouter API details
-API_KEY = "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"
+API_KEY = os.getenv("API_KEY")  # Load API key from environment variable
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODEL_NAME = "deepseek/deepseek-chat:free"
 
@@ -51,13 +56,11 @@ This app leverages a sophisticated multi-agent workflow powered by LangChain to 
             
 Both statements are tailored to handle crisis situations while protecting the company’s reputation and legal standing.
 """)
-
 # Input: Crisis Description
 issue_description = st.text_area(
     "Describe the crisis scenario:",
     placeholder="E.g., Kia recalls 80,000 vehicles due to faulty wiring, improper air bag deployment"
 )
-
 # Button to run the workflow
 if st.button("Generate Statements"):
     if issue_description.strip() == "":

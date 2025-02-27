@@ -1,6 +1,4 @@
-# Core dependencies
-streamlit==1.23.1  # Specify the version of Streamlit you're using
-requests==2.31.0   # For making HTTP requests to the OpenRouter API
-
-# Optional dependencies (if needed)
-python-dotenv==1.0.0  # For managing environment variables (optional)
+streamlit==1.23.1
+requests==2.31.0
+python-dotenv==1.0.0
+Pillow==10.2.0
