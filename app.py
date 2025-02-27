@@ -21,11 +21,24 @@ def call_openrouter(prompt):
         "model": MODEL_NAME,
         "messages": [{"role": "user", "content": prompt}]
     }
-    response = requests.post(API_URL, json=data, headers=headers)
-    if response.status_code == 200:
-        return response.json()["choices"][0]["message"]["content"]
-    else:
-        return f"Error: {response.status_code} - {response.text}"
+    try:
+        response = requests.post(API_URL, json=data, headers=headers, timeout=10)  # 10-second timeout
+        if response.status_code == 200:
+            response_json = response.json()
+            if "choices" in response_json and len(response_json["choices"]) > 0:
+                return response_json["choices"][0]["message"]["content"]
+            else:
+                st.error("Invalid API response format.")
+                return None
+        else:
+            st.error(f"API Error: {response.status_code} - {response.text}")
+            return None
+    except requests.exceptions.Timeout:
+        st.error("The API request timed out. Please try again.")
+        return None
+    except requests.exceptions.RequestException as e:
+        st.error(f"Network error: {e}")
+        return None
 
 # Streamlit App
 st.title("Crisis Management Workflow")
@@ -47,8 +60,8 @@ issue_description = st.text_area(
 
 # Button to run the workflow
 if st.button("Generate Statements"):
-    if issue_description.strip() == "":
-        st.error("Please enter a crisis scenario.")
+    if not issue_description.strip():
+        st.error("Please enter a valid crisis scenario.")
     else:
         with st.spinner("Generating responses..."):
             # Generate Crisis Management Statement
@@ -67,28 +80,31 @@ if st.button("Generate Statements"):
             """
             crisis_response = call_openrouter(crisis_prompt)
 
-            # Generate Legal-Safe Press Statement
-            legal_prompt = f"""
-            You are a legal expert.
-            Review the following short press statement and edit it to (1) deny the direct culpability, and (2) remove any language that could put the company in legal liability.
-            Ensure the statement remains professional and reassuring but avoids making admissions of fault or liability.
-            In the final shared statement, please add a note about what your changed from the original statement and why, giving at least 1 concrete example.
+            if crisis_response:
+                # Generate Legal-Safe Press Statement
+                legal_prompt = f"""
+                You are a legal expert.
+                Review the following short press statement and edit it to (1) deny the direct culpability, and (2) remove any language that could put the company in legal liability.
+                Ensure the statement remains professional and reassuring but avoids making admissions of fault or liability.
+                In the final shared statement, please add a note about what your changed from the original statement and why, giving at least 1 concrete example.
 
-            Crisis Situation: {issue_description}
+                Crisis Situation: {issue_description}
 
-            Original Press Statement:
-            {crisis_response}
+                Original Press Statement:
+                {crisis_response}
 
-            Legally Safe Press Statement:
-            """
-            legal_response = call_openrouter(legal_prompt)
+                Legally Safe Press Statement:
+                """
+                legal_response = call_openrouter(legal_prompt)
 
-            # Display Crisis Management Statement
-            st.subheader("🟥 Crisis Management Statement")
-            st.write(crisis_response)
+                if legal_response:
+                    # Display Crisis Management Statement
+                    st.subheader("🟥 Crisis Management Statement")
+                    st.write(crisis_response)
 
-            # Display Legal-Safe Press Statement
-            st.subheader("🟦 Final Legal-Safe Press Statement")
-            st.write(legal_response)
+                    # Display Legal-Safe Press Statement
+                    st.subheader("🟦 Final Legal-Safe Press Statement")
+                    st.write(legal_response)
 
-            st.success("Legally safe press statement generated!")
+                    # Final
+                    st.success("Statements saved to 'crisis_response_output.json'.")
